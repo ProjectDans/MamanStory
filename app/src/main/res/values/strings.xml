@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">MamanStory</string>
+    <string name="sign_in">Sign In</string>
+    <string name="password">Password</string>
+    <string name="email">Email Address</string>
+    <string name="welcome_text">Hi! Welcome To Maman Story App</string>
+    <string name="register_text">Belum Punya Akun? Yuk Daftar Dulu</string>
+    <string name="name">Full Name</string>
+    <string name="register_image">Register Image</string>
+    <string name="btn_register">Register</string>
+    <string name="title_welcome_page">Selamat Datang di Aplikasi Maman Story</string>
+    <string name="login">Masuk</string>
+    <string name="signup">Daftar</string>
+    <string name="message_welcome_page">Platform Social Media Pertama di Indonesia Dengan Berbagai Macam Fitur dan Yang Paling Penting Adalah Pertama Kalinya Nama Maman Digunakan Menjadi Sebuah Nama Aplikasi</string>
+    <string name="welcome_image">Welcome Image</string>
+</resources>
