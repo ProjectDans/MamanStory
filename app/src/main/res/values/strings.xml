@@ -14,4 +14,7 @@
     <string name="message_welcome_page">Platform Social Media Pertama di Indonesia Dengan Berbagai Macam Fitur dan Yang Paling Penting Adalah Pertama Kalinya Nama Maman Digunakan Menjadi Sebuah Nama Aplikasi</string>
     <string name="welcome_image">Welcome Image</string>
     <string name="btnAddSnapStory">Button Add Snap Story</string>
+    <string name="description">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</string>
+    <string name="image_description">Image Description</string>
+    <string name="judul_text_story">Judul Text Story</string>
 </resources>
