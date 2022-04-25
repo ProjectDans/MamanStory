@@ -3,6 +3,9 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/Administrator/AndroidStudioProjects/MamanStory/app/src/main/res/layout/activity_add_snap_story.xml" value="0.2" />
+        <entry key="..\:/Users/Administrator/AndroidStudioProjects/MamanStory/app/src/main/res/layout/activity_login.xml" value="0.2" />
+        <entry key="..\:/Users/Administrator/AndroidStudioProjects/MamanStory/app/src/main/res/layout/activity_snap_story.xml" value="0.25" />
         <entry key="..\:/Users/asus/AndroidStudioProjects/MamanStory/app/src/main/res/drawable-v24/ic_baseline_add_24.xml" value="0.1335" />
         <entry key="..\:/Users/asus/AndroidStudioProjects/MamanStory/app/src/main/res/drawable/ic_baseline_add_24.xml" value="0.1335" />
         <entry key="..\:/Users/asus/AndroidStudioProjects/MamanStory/app/src/main/res/layout/activity_login.xml" value="0.25416666666666665" />
