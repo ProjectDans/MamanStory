@@ -23,6 +23,7 @@ class SettingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySettingBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        supportActionBar?.title = "Settings"
         storyModel()
         //button logout
         binding.btnLogout.setOnClickListener {

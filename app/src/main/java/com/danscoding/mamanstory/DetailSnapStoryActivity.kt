@@ -13,6 +13,7 @@ class DetailSnapStoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDetailSnapStoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        supportActionBar?.hide()
         detailStory()
     }
 

@@ -31,12 +31,6 @@ class PreferenceStoryAccount private constructor(private val dataStoreStoryApp: 
         }
     }
 
-    suspend fun storyLoginApp(){
-        dataStoreStoryApp.edit { preferences ->
-            preferences[STATE_ACCOUNT_STORY_KEY] = true
-        }
-    }
-
     suspend fun storyLogoutApp(){
         dataStoreStoryApp.edit { preferences ->
             preferences[STATE_ACCOUNT_STORY_KEY] = false

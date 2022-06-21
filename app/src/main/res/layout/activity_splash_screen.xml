@@ -9,7 +9,6 @@
     <com.airbnb.lottie.LottieAnimationView
         android:id="@+id/splashScreen"
         app:lottie_autoPlay="true"
-        app:lottie_loop="true"
         android:layout_centerInParent="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

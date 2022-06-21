@@ -1,3 +1,5 @@
+@file:Suppress("PrivatePropertyName")
+
 package com.danscoding.mamanstory
 
 import android.annotation.SuppressLint
@@ -11,7 +13,7 @@ import android.os.Handler
 @Suppress("DEPRECATION")
 class SplashScreen : AppCompatActivity() {
     //variable declaration
-    private val SPLASH_TIME_OUT: Long = 2000
+    private val SPLASH_TIME_OUT: Long = 1000
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

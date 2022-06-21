@@ -30,7 +30,7 @@ class SnapStoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySnapStoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        supportActionBar?.title = "Settings"
+        supportActionBar?.title = "Maman Story"
         getListStory()
         binding.btnAddSnapStory.setOnClickListener {
             val intentAddStory = Intent(this@SnapStoryActivity, AddSnapStoryActivity::class.java)

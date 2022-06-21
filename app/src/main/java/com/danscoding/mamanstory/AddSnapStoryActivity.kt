@@ -68,7 +68,7 @@ class AddSnapStoryActivity : AppCompatActivity() {
 
     private fun startCameraX() {
         val intentCameraX = Intent(this, CameraActivity::class.java)
-        launcherCamera.launch(intentCameraX)
+        launcherIntentCameraX.launch(intentCameraX)
     }
 
     private fun postStoryViewModel() {
@@ -140,7 +140,7 @@ class AddSnapStoryActivity : AppCompatActivity() {
         }
     }
 
-    private val launcherCamera = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
+    private val launcherIntentCameraX = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
         if (it.resultCode == CAMERA_X_RESULT_CODE){
             val fileCamera = it.data?.getSerializableExtra("picture") as File
             val isBackCamera = it.data?.getBooleanExtra("isBackCamera", true) as Boolean
