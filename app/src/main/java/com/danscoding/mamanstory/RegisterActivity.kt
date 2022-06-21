@@ -1,13 +1,16 @@
 package com.danscoding.mamanstory
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.util.Patterns
 import android.view.View
 import android.widget.Toast
-import com.danscoding.mamanstory.api.ApiConfig
+import androidx.appcompat.app.AppCompatActivity
+import com.danscoding.mamanstory.api.ApiConfiguration
 import com.danscoding.mamanstory.databinding.ActivityRegisterBinding
-import com.danscoding.mamanstory.response.AccountRegisterResponse
+import com.danscoding.mamanstory.model.ModelRegister
+import com.danscoding.mamanstory.response.ResponseRegisterStory
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -20,41 +23,85 @@ class RegisterActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        showLoading(false)
-        binding.btnRegister.setOnClickListener{
-            showLoading(true)
-            registerTask(binding.nameEditText.text.toString(), binding.emailEditText.text.toString(), binding. passwordEditText.text.toString())
+        textField()
+    }
+
+    private fun textField() {
+        binding.btnRegister.setOnClickListener {
+            val name = binding.nameEditText.text.toString()
+            val email = binding.emailEditText.text.toString()
+            val password = binding.passwordEditText.text.toString()
+            when {
+                name.isEmpty() -> {
+                    binding.nameEditText.error = "Harap isi form nama"
+                }
+                email.isEmpty() -> {
+                    binding.emailEditText.error = "Harap isi form email"
+                }
+                password.isEmpty() -> {
+                    binding.emailEditText.error = "Harap isi password"
+                }
+                else -> {
+                    binding.nameEditText.error = null
+                    binding.emailEditText.error = textValidate()
+                }
+            }
         }
     }
 
-    private fun registerTask(nama: String, email: String, password: String){
-        val client = ApiConfig.getApiService().registerAccountTask(nama,email,password)
-        client.enqueue(object: Callback<AccountRegisterResponse> {
-            override fun onResponse(
-                call: Call<AccountRegisterResponse>,
-                response: Response<AccountRegisterResponse>
-            ) {
-                showLoading(false)
-                if (response.isSuccessful) {
-                    showToast(response.body()?.message.toString() + " Silakan Login")
-                    finish()
-                } else {
-                    showToast(response.message())
+    private fun textValidate(): String? {
+        val valid = binding.emailEditText.text.toString()
+        if (!Patterns.EMAIL_ADDRESS.matcher(valid).matches()) {
+            return "Invalid E-mail"
+        } else {
+            showLoading(true)
+            val registerIntent = Intent(this@RegisterActivity, LoginActivity::class.java)
+            startActivity(registerIntent)
+            finish()
+            makeAccountStory()
+        }
+        return null
+    }
+
+    private fun makeAccountStory() {
+        val name = binding.nameEditText.text.toString().trim()
+        val email = binding.emailEditText.text.toString().trim()
+        val password = binding.passwordEditText.text.toString().trim()
+
+        showLoading(true)
+
+        ApiConfiguration().getApiService().storyRegister(ModelRegister(
+            name,
+            email,
+            password))
+            .enqueue(object : Callback<ResponseRegisterStory> {
+                override fun onResponse(
+                    call: Call<ResponseRegisterStory>,
+                    response: Response<ResponseRegisterStory>
+                ) {
+                    if (response.code() == 201){
+                        showLoading(false)
+                        Toast.makeText(applicationContext, "Register Berhasil", Toast.LENGTH_SHORT).show()
+                        finish()
+                    } else {
+                        showLoading(false)
+                        Toast.makeText(applicationContext, "Register tidak berhasil, coba lakukan registrasi ulang", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            }
-            override fun onFailure(call: Call<AccountRegisterResponse>, t: Throwable) {
-                showLoading(false)
-                Log.e("FAILURE", "onFailure: ${t.message.toString()}")
-            }
 
-        })
+                override fun onFailure(call: Call<ResponseRegisterStory>, t: Throwable) {
+                    showLoading(false)
+                    Log.d("failure: ", t.message.toString())
+                }
+
+            })
     }
 
-    private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun showLoading(isLoading: Boolean) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+    private fun showLoading(isLoading: Boolean){
+        if (isLoading) {
+            binding.progressBar.visibility = View.VISIBLE
+        } else {
+            binding.progressBar.visibility = View.GONE
+        }
     }
 }
