@@ -1,5 +1,6 @@
 package com.danscoding.mamanstory
 
+import android.animation.ObjectAnimator
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -25,6 +26,9 @@ class RegisterActivity : AppCompatActivity() {
         setContentView(binding.root)
         textField()
     }
+
+
+
 
     private fun textField() {
         binding.btnRegister.setOnClickListener {

@@ -17,7 +17,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/image_login"
+        app:srcCompat="@drawable/register_bg"
         android:contentDescription="@string/register_image" />
 
     <TextView
@@ -107,27 +107,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/emailEditTextLayout" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/passwordEditTextLayout"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-        android:layout_width="0dp"
+    <com.danscoding.mamanstory.customview.EditText
+        android:id="@+id/passwordEditText"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:drawablePadding="10dp"
+        android:drawableStart="@drawable/ic_baseline_lock_open_24"
+        android:padding="15dp"
+        android:background="@drawable/custom_edit_text"
+        android:ems="10"
+        android:inputType="textPassword"
         app:layout_constraintTop_toBottomOf="@+id/passwordTextView"
-        app:passwordToggleEnabled="true"
-        app:startIconDrawable="@drawable/ic_lock">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/passwordEditText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:inputType="textPassword"
-            app:passwordToggleEnabled="true" />
-    </com.google.android.material.textfield.TextInputLayout>
+        app:passwordToggleEnabled="true" />
 
     <Button
         android:id="@+id/btnRegister"
@@ -136,10 +130,9 @@
         android:layout_marginTop="24dp"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
-        android:backgroundTint="#939393"
         android:text="@string/btn_register"
         android:textAllCaps="false"
-        app:layout_constraintTop_toBottomOf="@+id/passwordEditTextLayout"
+        app:layout_constraintTop_toBottomOf="@+id/passwordEditText"
         tools:layout_editor_absoluteX="32dp" />
 
     <ProgressBar

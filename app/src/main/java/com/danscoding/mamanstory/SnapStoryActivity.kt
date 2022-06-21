@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.datastore.core.DataStore
@@ -28,18 +30,32 @@ class SnapStoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivitySnapStoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        supportActionBar?.title = "Settings"
         getListStory()
         binding.btnAddSnapStory.setOnClickListener {
             val intentAddStory = Intent(this@SnapStoryActivity, AddSnapStoryActivity::class.java)
             startActivity(intentAddStory)
         }
-        binding.logoutButton.setOnClickListener {
-            storyViewModel.storyLogout()
-            finish()
-        }
         binding.rvSnapStory.layoutManager = LinearLayoutManager(this)
         adapterStory = AdapterStory()
         binding.rvSnapStory.adapter = adapterStory
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val inflate = menuInflater
+        inflate.inflate(R.menu.menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId){
+            R.id.btnSetting -> {
+                Intent(this, SettingActivity::class.java).also {
+                    startActivity(it)
+                }
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 
 
