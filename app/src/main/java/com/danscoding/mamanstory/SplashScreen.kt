@@ -4,9 +4,9 @@ package com.danscoding.mamanstory
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
+import androidx.appcompat.app.AppCompatActivity
 
 
 @SuppressLint("CustomSplashScreen")
@@ -21,7 +21,7 @@ class SplashScreen : AppCompatActivity() {
         supportActionBar?.hide()
         //code for splashscreen activity
         Handler().postDelayed({
-            startActivity(Intent(this, LoginActivity::class.java))
+            startActivity(Intent(this, SnapStoryActivity::class.java))
             finish()
         }, SPLASH_TIME_OUT)
     }
