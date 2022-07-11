@@ -1,143 +1,191 @@
 package com.danscoding.mamanstory
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
+import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import com.danscoding.mamanstory.api.ApiConfiguration
+import androidx.lifecycle.viewModelScope
+import androidx.paging.ExperimentalPagingApi
+import com.danscoding.mamanstory.SnapStoryActivity.Companion.EXTRA_TOKEN
 import com.danscoding.mamanstory.databinding.ActivityAddSnapStoryBinding
-import com.danscoding.mamanstory.preference.PreferenceStoryAccount
-import com.danscoding.mamanstory.response.ResponseRegisterStory
 import com.danscoding.mamanstory.utils.reduceFileImage
 import com.danscoding.mamanstory.utils.rotateBitmap
 import com.danscoding.mamanstory.utils.uriToFile
-import com.danscoding.mamanstory.viewmodel.StoryViewModelFactory
+import com.danscoding.mamanstory.viewmodel.UploadViewModel
 import com.danscoding.mamanstory.viewmodel.ViewStoryViewModel
-import kotlinx.coroutines.Dispatchers
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.io.File
 
+@OptIn(ExperimentalPagingApi::class)
+@AndroidEntryPoint
 class AddSnapStoryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAddSnapStoryBinding
     private val Context.dataStoreStoryApp: DataStore<Preferences> by preferencesDataStore(name= "storyAccount")
     private lateinit var addSnapStory: ViewStoryViewModel
+    private lateinit var currentPhotoPath: String
+    private lateinit var token: String
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var getFile: File? = null
+    private var location: Location? = null
+    private var lat: RequestBody? = null
+    private var lon: RequestBody? = null
+    private val viewModel: UploadViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddSnapStoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        if (!havePermission()){
-            ActivityCompat.requestPermissions(
-                this,
-                REQUIRED_PERMISSION,
-                REQUEST_CODE_PERMISSION
-            )
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        viewModel.viewModelScope.launch {
+            viewModel.getAuthToken().collect {
+                token = it!!
+            }
         }
-        setupActionButton()
-        postStoryViewModel()
+
+        getUserLocation()
+         binding.apply {
+             btnUploadStory.setOnClickListener {
+                 uploadStory()
+             }
+             btnOpenCamera.setOnClickListener {
+                 startCameraX()
+             }
+             btnOpenGallery.setOnClickListener {
+                 openGallery()
+             }
+         }
     }
 
-    private fun setupActionButton(){
-        binding.btnOpenCamera.setOnClickListener { startCameraX() }
-        binding.btnOpenGallery.setOnClickListener { addImage() }
-        binding.btnUploadStory.setOnClickListener { lifecycleScope.launch(Dispatchers.Main) { postStory() } }
+    private fun uploadStory() {
+        if (getFile != null) {
+            showLoading(true)
+            val desc = binding.edtTextStory
+            val file = reduceFileImage(getFile as File)
+            val description = binding.edtTextStory.text.toString().toRequestBody("text/plain".toMediaType())
+            val requestImageFile = file.asRequestBody("image/jpeg".toMediaTypeOrNull())
+            val imageMultipart: MultipartBody.Part = MultipartBody.Part.createFormData(
+                "photo", file.name, requestImageFile
+            )
+            if (location != null){
+                lat = location?.latitude.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+                lon = location?.longitude.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+            }
+
+            viewModel.viewModelScope.launch {
+                viewModel.uploadImage(token, imageMultipart, description, lat, lon)
+                    .collect{ response ->
+                        response.onSuccess {
+                            Intent(this@AddSnapStoryActivity, SnapStoryActivity::class.java).also {
+                                it.apply {
+                                    putExtra(EXTRA_TOKEN, token)
+                                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+                                }
+                                startActivity(it)
+                                finish()
+                            }
+                        }
+                        response.onFailure {
+                            if (desc.text.toString().isEmpty()) {
+                                Toast.makeText(
+                                    this@AddSnapStoryActivity,
+                                    getString(R.string.story_desc_warning),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                showLoading(false)
+                            } else {
+                                Toast.makeText(
+                                    this@AddSnapStoryActivity,
+                                    getString(R.string.upload_failed),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                showLoading(false)
+                            }
+                        }
+                    }
+            }
+        } else {
+            showLoading(false)
+            Toast.makeText(
+                this,
+                getString(R.string.upload_warning),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
+
+    private fun getUserLocation() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            fusedLocationClient.lastLocation.addOnSuccessListener {
+                if (it != null) {
+                    this.location = it
+                } else {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.app_permission_warning),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                getUserLocation()
+            } else {
+                Toast.makeText(
+                    this,
+                    getString(R.string.app_permission_warning),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
 
     private fun startCameraX() {
         val intentCameraX = Intent(this, CameraActivity::class.java)
         launcherIntentCameraX.launch(intentCameraX)
     }
 
-    private fun postStoryViewModel() {
-        val preference = PreferenceStoryAccount.getStoryApp(dataStoreStoryApp)
-        addSnapStory = ViewModelProvider(this, StoryViewModelFactory(preference))[ViewStoryViewModel::class.java]
-    }
-
-    private fun addImage() {
+    private fun openGallery() {
         val intent = Intent()
         intent.action = Intent.ACTION_GET_CONTENT
         intent.type = "image/*"
-        val choosePicture = Intent.createChooser(intent, "Pick a Picture")
-        launchGallery.launch(choosePicture)
-    }
-
-    private fun postStory() {
-        if (getFile != null){
-            val fileImage = reduceFileImage(getFile as File)
-            val description = binding.edtTextStory.text.toString().toRequestBody("text/plain".toMediaType())
-            val request = fileImage.asRequestBody("image/jpeg".toMediaTypeOrNull())
-            val multiparImage : MultipartBody.Part = MultipartBody.Part.createFormData(
-                "photo",
-                fileImage.name,
-                request
-            )
-            binding.btnUploadStory.visibility = View.GONE
-            showLoading(true)
-            addSnapStory.getAccountData().observe(this){
-                user ->
-                val start = ApiConfiguration().getApiService().uploadSnapStory(multiparImage, description, "Bearer ${user.token}")
-                start.enqueue(object : Callback<ResponseRegisterStory>{
-                    override fun onResponse(
-                        call: Call<ResponseRegisterStory>,
-                        response: Response<ResponseRegisterStory>
-                    ) {
-                        if (response.isSuccessful){
-                            val responseBody = response.body()
-                            if (responseBody != null && !responseBody.error){
-                                Toast.makeText(this@AddSnapStoryActivity, "Upload Story Successfully", Toast.LENGTH_SHORT).show()
-                                finish()
-                            }
-                        } else {
-                            Toast.makeText(this@AddSnapStoryActivity, response.message(), Toast.LENGTH_SHORT).show()
-                            binding.btnUploadStory.visibility = View.VISIBLE
-                        }
-                    }
-
-                    override fun onFailure(call: Call<ResponseRegisterStory>, t: Throwable) {
-                        showLoading(false)
-                        Toast.makeText(this@AddSnapStoryActivity, "Bad Response", Toast.LENGTH_SHORT).show()
-                    }
-
-                })
-            }
-        } else {
-            Toast.makeText(this@AddSnapStoryActivity, "Insert your picture", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private var getFile: File? = null
-    private val launchGallery = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
-        result ->
-        if (result.resultCode == RESULT_OK){
-            val selectedPicture : Uri = result.data?.data as Uri
-            val filePicture = uriToFile(selectedPicture, this@AddSnapStoryActivity)
-            getFile = filePicture
-
-            binding.previewImageView.setImageURI(selectedPicture)
-        }
+        val chooser = Intent.createChooser(intent, getString(R.string.choose_picture))
+        launcherIntentGallery.launch(chooser)
     }
 
     private val launcherIntentCameraX = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
@@ -151,29 +199,22 @@ class AddSnapStoryActivity : AppCompatActivity() {
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if(requestCode == REQUEST_CODE_PERMISSION){
-            if(!havePermission()){
-                Toast.makeText(this, "No Permission Granted", Toast.LENGTH_SHORT).show()
-                finish()
-            }
-        }
-    }
-
-    private fun havePermission() = REQUIRED_PERMISSION.all {
-        ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
-    }
-
     private fun showLoading(isLoading: Boolean){
         if (isLoading) {
             binding.progressBar.visibility = View.VISIBLE
         } else {
             binding.progressBar.visibility = View.GONE
+        }
+    }
+
+    private val launcherIntentGallery = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK){
+            val selectedPhoto: Uri = result.data?.data as Uri
+            val file = uriToFile(selectedPhoto, this@AddSnapStoryActivity)
+            getFile = file
+            binding.previewImageView.setImageURI(selectedPhoto)
         }
     }
 

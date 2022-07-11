@@ -4,8 +4,14 @@
 
     <item
         android:id="@+id/btnSetting"
-        android:title="Setting"
+        android:title="@string/setting"
         app:showAsAction="always"
         android:icon="@drawable/ic_setting"/>
+
+    <item
+        android:id="@+id/btnMapsActivity"
+        android:title="@string/maps"
+        app:showAsAction="always"
+        android:icon="@drawable/ic_maps"/>
 
 </menu>
