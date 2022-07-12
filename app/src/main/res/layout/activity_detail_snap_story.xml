@@ -10,7 +10,8 @@
         android:id="@+id/imageDetail"
         android:layout_width="match_parent"
         android:layout_height="450dp"
-        android:src="@drawable/ic_image" />
+        android:src="@drawable/ic_image"
+        android:contentDescription="@string/image_preview" />
 
     <LinearLayout
         android:id="@+id/linearLayout"
@@ -23,7 +24,6 @@
             android:drawablePadding="15dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/imageDetail"
             android:layout_marginTop="16dp"
             android:layout_marginStart="32dp"
             android:textSize="18sp"

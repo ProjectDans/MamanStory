@@ -41,7 +41,7 @@ class SnapStoryRemoteMediator(
             }
         }
         try {
-            val responseData = apiService.getStory(token, page,state.config.pageSize, null)
+            val responseData = apiService.getStories(token, page,state.config.pageSize, null)
             val eofPaginationReached = responseData.listStory.isEmpty()
 
             database.withTransaction {

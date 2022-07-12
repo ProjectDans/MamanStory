@@ -29,7 +29,11 @@
     <string name="maps">Maps</string>
     <string name="choose_picture">pilih gambar</string>
     <string name="apa_yang_anda_pikirkan">Apa Yang Anda Pikirkan?</string>
-    <string name="story_desc_warning">Silahkan Isi Kolom Deskripsi</string>
-    <string name="upload_failed">Gagal Upload</string>
     <string name="upload_warning">Pilih Gambar Terlebih Dahulu</string>
+    <string name="retry">Retry</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="sign_out">Sign Out</string>
+    <string name="image_preview">Image Preview</string>
+    <string name="upload_story">Upload Story</string>
+    <string name="gallery">Gallery</string>
 </resources>

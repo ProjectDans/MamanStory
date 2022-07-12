@@ -3,15 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/btnSetting"
-        android:title="@string/setting"
-        app:showAsAction="always"
-        android:icon="@drawable/ic_setting"/>
-
-    <item
         android:id="@+id/btnMapsActivity"
         android:title="@string/maps"
         app:showAsAction="always"
         android:icon="@drawable/ic_maps"/>
+
+    <item
+        android:id="@+id/btnLogout"
+        android:title="@string/sign_out"/>
 
 </menu>

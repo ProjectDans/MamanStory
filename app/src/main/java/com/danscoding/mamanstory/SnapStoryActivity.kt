@@ -1,7 +1,5 @@
 package com.danscoding.mamanstory
 
-import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
@@ -9,19 +7,13 @@ import android.view.MenuItem
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
-import androidx.lifecycle.ViewModelProvider
 import androidx.paging.ExperimentalPagingApi
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.danscoding.mamanstory.adapter.AdapterStory
+import com.danscoding.mamanstory.adapter.LoadingStateAdapter
+import com.danscoding.mamanstory.adapter.StoryAdapter
 import com.danscoding.mamanstory.databinding.ActivitySnapStoryBinding
-import com.danscoding.mamanstory.preference.PreferenceStoryAccount
 import com.danscoding.mamanstory.viewmodel.HomeViewModel
-import com.danscoding.mamanstory.viewmodel.StoryViewModelFactory
-import com.danscoding.mamanstory.viewmodel.ViewStoryViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @OptIn(ExperimentalPagingApi::class)
@@ -31,7 +23,7 @@ class SnapStoryActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySnapStoryBinding
     private lateinit var recyclerView: RecyclerView
     private val viewModel: HomeViewModel by viewModels()
-    private lateinit var adapterStory: AdapterStory
+    private lateinit var adapterStory: StoryAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,9 +31,26 @@ class SnapStoryActivity : AppCompatActivity() {
         setContentView(binding.root)
         supportActionBar?.title = "Maman Story"
 
-        adapterStory = AdapterStory()
+        adapterStory = StoryAdapter()
         recyclerView = binding.rvSnapStory
         recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = adapterStory.withLoadStateFooter(
+            footer = LoadingStateAdapter {
+                adapterStory.retry()
+            }
+        )
+        recyclerView.setHasFixedSize(true)
+
+        viewModel.getStory(intent.getStringExtra(EXTRA_TOKEN)!!).observe(this){
+            adapterStory.submitData(lifecycle, it)
+            showLoading(false)
+        }
+
+        binding.btnAddSnapStory.setOnClickListener {
+            Intent(this, AddSnapStoryActivity::class.java).also {
+                startActivity(it)
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -52,48 +61,23 @@ class SnapStoryActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId){
-            R.id.btnSetting -> {
-                Intent(this, SettingActivity::class.java).also {
-                    startActivity(it)
-                }
-            }
             R.id.btnMapsActivity -> {
                 Intent(this, MapsActivity::class.java).also {
                     startActivity(it)
                 }
             }
+            R.id.btnLogout -> {
+                viewModel.delelteAuthToken()
+                Intent(this, OtenActivity::class.java).also {
+                    startActivity(it)
+                    finish()
+                }
+                return true
+            }
+            else -> return super.onOptionsItemSelected(item)
         }
         return super.onOptionsItemSelected(item)
     }
-
-
-//    @SuppressLint("NotifyDataSetChanged")
-//    private fun getListStory() {
-//        val prefStory = PreferenceStoryAccount.getStoryApp(dataStoreStoryApp)
-//        storyViewModel = ViewModelProvider(
-//            this, StoryViewModelFactory(prefStory)
-//        )[ViewStoryViewModel::class.java]
-//
-//        storyViewModel.getAccountData().observe(this){ storyAccount ->
-//            if (!storyAccount.isLogin){
-//                val intentStory = Intent(this@SnapStoryActivity, LoginActivity::class.java)
-//                intentStory.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-//                startActivity(intentStory)
-//            }
-//            showLoading(true)
-//            storyViewModel.setAccountStory(tokenStoryAuth = storyAccount.token)
-//        }
-//
-//        storyViewModel.getStoryAccount().observe(this){
-//            if (it!=null){
-//                adapterStory.setStoryList(it)
-//                adapterStory.notifyDataSetChanged()
-//                showLoading(false)
-//            } else {
-//                showLoading(false)
-//            }
-//        }
-//    }
 
     private fun showLoading(isLoading: Boolean) {
         if (isLoading) {

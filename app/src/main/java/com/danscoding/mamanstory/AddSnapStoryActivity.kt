@@ -1,31 +1,30 @@
 package com.danscoding.mamanstory
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewModelScope
 import androidx.paging.ExperimentalPagingApi
 import com.danscoding.mamanstory.SnapStoryActivity.Companion.EXTRA_TOKEN
 import com.danscoding.mamanstory.databinding.ActivityAddSnapStoryBinding
+import com.danscoding.mamanstory.utils.createCustomTempFile
 import com.danscoding.mamanstory.utils.reduceFileImage
 import com.danscoding.mamanstory.utils.rotateBitmap
 import com.danscoding.mamanstory.utils.uriToFile
 import com.danscoding.mamanstory.viewmodel.UploadViewModel
-import com.danscoding.mamanstory.viewmodel.ViewStoryViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,16 +36,15 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
+import java.io.FileOutputStream
 
 @OptIn(ExperimentalPagingApi::class)
 @AndroidEntryPoint
 class AddSnapStoryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAddSnapStoryBinding
-    private val Context.dataStoreStoryApp: DataStore<Preferences> by preferencesDataStore(name= "storyAccount")
-    private lateinit var addSnapStory: ViewStoryViewModel
-    private lateinit var currentPhotoPath: String
     private lateinit var token: String
+    private lateinit var currentPhotoPath: String
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var getFile: File? = null
     private var location: Location? = null
@@ -73,7 +71,7 @@ class AddSnapStoryActivity : AppCompatActivity() {
                  uploadStory()
              }
              btnOpenCamera.setOnClickListener {
-                 startCameraX()
+                 startCamera()
              }
              btnOpenGallery.setOnClickListener {
                  openGallery()
@@ -98,7 +96,7 @@ class AddSnapStoryActivity : AppCompatActivity() {
 
             viewModel.viewModelScope.launch {
                 viewModel.uploadImage(token, imageMultipart, description, lat, lon)
-                    .collect{ response ->
+                    .collect{ response: Result<Any> ->
                         response.onSuccess {
                             Intent(this@AddSnapStoryActivity, SnapStoryActivity::class.java).also {
                                 it.apply {
@@ -110,19 +108,13 @@ class AddSnapStoryActivity : AppCompatActivity() {
                             }
                         }
                         response.onFailure {
-                            if (desc.text.toString().isEmpty()) {
+                            if (desc.text.toString().isEmpty()){
                                 Toast.makeText(
-                                    this@AddSnapStoryActivity,
-                                    getString(R.string.story_desc_warning),
-                                    Toast.LENGTH_SHORT
+                                    this@AddSnapStoryActivity, "Please Fill Your Description Story", Toast.LENGTH_SHORT
                                 ).show()
                                 showLoading(false)
                             } else {
-                                Toast.makeText(
-                                    this@AddSnapStoryActivity,
-                                    getString(R.string.upload_failed),
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                Toast.makeText(this@AddSnapStoryActivity, "Upload Failed", Toast.LENGTH_SHORT).show()
                                 showLoading(false)
                             }
                         }
@@ -175,9 +167,38 @@ class AddSnapStoryActivity : AppCompatActivity() {
             }
         }
 
-    private fun startCameraX() {
-        val intentCameraX = Intent(this, CameraActivity::class.java)
-        launcherIntentCameraX.launch(intentCameraX)
+    private fun startCamera() {
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        intent.resolveActivity(packageManager)
+
+        createCustomTempFile(application).also {
+            val photoURI: Uri = FileProvider.getUriForFile(
+                this,
+                "com.danscoding.mamanstory",
+                it
+            )
+            currentPhotoPath = it.absolutePath
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
+            launcherIntentCamera.launch(intent)
+        }
+    }
+
+    private val launcherIntentCamera = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (it.resultCode == RESULT_OK) {
+            val myFile = File(currentPhotoPath)
+            val result: Bitmap = rotateBitmap(
+                BitmapFactory.decodeFile(myFile.path),
+                true
+            )
+            val fos = FileOutputStream(myFile)
+            result.compress(Bitmap.CompressFormat.JPEG, 100, fos)
+            fos.flush()
+            fos.close()
+            getFile = myFile
+            binding.previewImageView.setImageBitmap(result)
+        }
     }
 
     private fun openGallery() {
@@ -186,17 +207,6 @@ class AddSnapStoryActivity : AppCompatActivity() {
         intent.type = "image/*"
         val chooser = Intent.createChooser(intent, getString(R.string.choose_picture))
         launcherIntentGallery.launch(chooser)
-    }
-
-    private val launcherIntentCameraX = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
-        if (it.resultCode == CAMERA_X_RESULT_CODE){
-            val fileCamera = it.data?.getSerializableExtra("picture") as File
-            val isBackCamera = it.data?.getBooleanExtra("isBackCamera", true) as Boolean
-
-            getFile = fileCamera
-            val result = rotateBitmap(BitmapFactory.decodeFile(getFile?.path), isBackCamera)
-            binding.previewImageView.setImageBitmap(result)
-        }
     }
 
     private fun showLoading(isLoading: Boolean){
@@ -216,12 +226,6 @@ class AddSnapStoryActivity : AppCompatActivity() {
             getFile = file
             binding.previewImageView.setImageURI(selectedPhoto)
         }
-    }
-
-    companion object{
-        const val CAMERA_X_RESULT_CODE = 200
-        private val REQUIRED_PERMISSION = arrayOf(android.Manifest.permission.CAMERA)
-        private const val REQUEST_CODE_PERMISSION = 10
     }
 
 }

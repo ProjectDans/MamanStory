@@ -58,8 +58,8 @@ class AppRepository @Inject constructor(
     fun getStory(token: String): Flow<PagingData<SnapStoryResponseItem>> {
         return Pager(
             config = PagingConfig(pageSize = 5),
-            remoteMediator = SnapStoryRemoteMediator(storyDatabase, apiService, "Bearer$token"),
-            pagingSourceFactory ={
+            remoteMediator = SnapStoryRemoteMediator(storyDatabase, apiService, "Bearer $token"),
+            pagingSourceFactory = {
                 storyDatabase.storyDao().getAllStory()
             }
         ).flow
@@ -68,7 +68,7 @@ class AppRepository @Inject constructor(
     fun getStoriesLocation(token: String): Flow<Result<ResponseStoryPost>> = flow{
         try {
             val userToken = "Bearer $token"
-            val response = apiService.getStory(userToken, null, size = 100, location = 1)
+            val response = apiService.getStories(userToken, null, size = 100, location = 1)
             Log.d("200", "Success")
             emit(Result.success(response))
         } catch (e: Exception){
