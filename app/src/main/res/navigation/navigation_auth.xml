@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/signinFragment">
+
+    <fragment
+        android:id="@+id/signinFragment"
+        android:name="com.danscoding.mamanstory.fragment.SigninFragment"
+        android:label="fragment_login"
+        tools:layout="@layout/fragment_signin">
+        <action
+            android:id="@+id/action_signinFragment_to_signupFragment"
+            app:destination="@id/signupFragment"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+    </fragment>
+    <fragment
+        android:id="@+id/signupFragment"
+        android:name="com.danscoding.mamanstory.fragment.SignupFragment"
+        android:label="fragment_register"
+        tools:layout="@layout/fragment_signup">
+        <action
+            android:id="@+id/action_signupFragment_to_signinFragment"
+            app:destination="@id/signinFragment"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_signupFragment_to_snapStoryActivity"
+            app:destination="@id/snapStoryActivity"
+            app:enterAnim="@android:anim/slide_in_left" />
+    </fragment>
+    <activity
+        android:id="@+id/snapStoryActivity"
+        android:name="com.danscoding.mamanstory.SnapStoryActivity"
+        android:label="activity_snap_story"
+        tools:layout="@layout/activity_snap_story" />
+</navigation>
